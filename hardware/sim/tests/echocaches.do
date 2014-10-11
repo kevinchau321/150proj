@@ -1,0 +1,13 @@
+start EchoTestbenchCaches
+file copy -force ../../../software/bios150v3/bios150v3.mif bios_mem.mif
+add wave echotestbenchCaches/*
+add wave EchoTestbenchCaches/mem_arch/*
+add wave EchoTestbenchCaches/mem_arch/dcache/*
+add wave EchoTestbenchCaches/mem_arch/icache/*
+add wave EchoTestbenchCaches/mem_arch/cache_bypass/*
+add wave EchoTestbenchCaches/mem_arch/req_con/*
+add wave EchoTestbenchCaches/DUT/dpath/*
+add wave EchoTestbenchCaches/DUT/ctrl/*
+add wave EchoTestbenchCaches/DUT/dpath/ua/*
+add wave EchoTestbenchCaches/DUT/dpath/regfile/*
+run 1000us

@@ -57,6 +57,7 @@ NET  "GPIO_LED[6]"                              IOSTANDARD=SSTL18_II_DCI;
 NET  "GPIO_LED[7]"                              IOSTANDARD=SSTL18_II_DCI;
 
 NET  "GPIO_SW_C"                                IOSTANDARD=LVCMOS33;
+NET  "GPIO_SW_S"                                IOSTANDARD=LVCMOS33;
 
 NET  "USER_CLK"                                 IOSTANDARD=LVCMOS33;
 
@@ -92,6 +93,7 @@ NET  "GPIO_LED[6]"                               LOC="AD24";
 NET  "GPIO_LED[7]"                               LOC="AE24";
 
 NET  "GPIO_SW_C"                                 LOC="AJ6";
+NET  "GPIO_SW_S"                                 LOC="V8";
 
 NET  "USER_CLK"                                  LOC="AH15";
 

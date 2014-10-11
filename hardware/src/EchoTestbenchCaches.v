@@ -12,10 +12,9 @@ module EchoTestbenchCaches();
     wire        DataOutValid;
     reg         DataOutReady;
 
+    // This clock is the 100MHz on-board crystal oscillator, not the CPU clock.
     parameter HalfCycle = 5;
     parameter Cycle = 2*HalfCycle;
-    parameter ClockFreq = 50_000_000;
-
     initial Clock = 0;
     always #(HalfCycle) Clock <= ~Clock;
 
@@ -47,44 +46,60 @@ module EchoTestbenchCaches();
     wire [31:0]  instruction;
     wire         stall;
 
-    // Instantiate your CPU here and connect the FPGA_SERIAL_TX wires
-    // to the UART we use for testing
-    
+    /* The PLL that generates all the clocks.
+    * The global mult/divide ratio is set to 6. The input clk is 100MHz.
+    * Therefore, freq of each output = 600MHz / CLKOUTx_DIVIDE
+    */
     PLL_BASE
     #(
+        .COMPENSATION("SYSTEM_SYNCHRONOUS"),
         .BANDWIDTH("OPTIMIZED"),
-        .CLKFBOUT_MULT(32),
+
+        .CLKFBOUT_MULT(6),
         .CLKFBOUT_PHASE(0.0),
+        .DIVCLK_DIVIDE(1),
+        .REF_JITTER(0.100),
         .CLKIN_PERIOD(10.0),
 
-        .CLKOUT0_DIVIDE(16),
+        `ifdef RISCV_CLK_50
+            .CLKOUT0_DIVIDE(12),
+        `endif `ifdef RISCV_CLK_100
+            .CLKOUT0_DIVIDE(6),
+        `endif
         .CLKOUT0_DUTY_CYCLE(0.5),
         .CLKOUT0_PHASE(0.0),
 
-        .CLKOUT1_DIVIDE(4),
+        .CLKOUT1_DIVIDE(3),
         .CLKOUT1_DUTY_CYCLE(0.5),
         .CLKOUT1_PHASE(0.0),
 
-        .CLKOUT2_DIVIDE(4),
+        .CLKOUT2_DIVIDE(3),
         .CLKOUT2_DUTY_CYCLE(0.5),
         .CLKOUT2_PHASE(0.0),
 
-        .CLKOUT3_DIVIDE(4),
+        .CLKOUT3_DIVIDE(3),
         .CLKOUT3_DUTY_CYCLE(0.5),
         .CLKOUT3_PHASE(90.0),
 
-        .CLKOUT4_DIVIDE(8),
+        .CLKOUT4_DIVIDE(6),
         .CLKOUT4_DUTY_CYCLE(0.5),
         .CLKOUT4_PHASE(0.0),
 
-        .CLKOUT5_DIVIDE(16),
+        .CLKOUT5_DIVIDE(12),
         .CLKOUT5_DUTY_CYCLE(0.5),
-        .CLKOUT5_PHASE(0.0),
-
-        .COMPENSATION("SYSTEM_SYNCHRONOUS"),
-        .DIVCLK_DIVIDE(4),
-        .REF_JITTER(0.100)
+        .CLKOUT5_PHASE(0.0)
     )
+
+    /* Output clocks:
+    * cpu_clk: 50MHz or 100MHz, depending on configuration
+    * clk200: 200MHz
+    * clk0: 200MHz
+    * clk90: 200MHz, 90 deg phase shift
+    * clkdiv0: 100MHz
+    * clk50: 50MHz
+    *
+    * For CP1, only cpu_clk is used. The rest are used for CP2 and CP3.
+    */
     user_clk_pll
     (
         .CLKFBOUT(pll_fb),
@@ -100,6 +115,7 @@ module EchoTestbenchCaches();
         .RST(1'b0)
     );
 
+    // The clocks need to be buffered before they can be used
     IBUFG user_clk_buf ( .I(Clock),    .O(user_clk_g) );
     BUFG  cpu_clk_buf  ( .I(cpu_clk),  .O(cpu_clk_g)  );
     BUFG  clk200_buf   ( .I(clk200),   .O(clk200_g)   );
@@ -108,12 +124,15 @@ module EchoTestbenchCaches();
     BUFG  clk90_buf    ( .I(clk90),    .O(clk90_g)    );
     BUFG  clkdiv0_buf  ( .I(clkdiv0),  .O(clkdiv0_g)  );
 
-    // Reset shift register:
+    // Shift register that keeps the reset signal high for an extended
+    // period of time. It is used for resetting the FIFOs in Memory150.
+    // Note that fifo_reset resets fifos, while reset_fifo is a fifo
+    // for the reset signal.
     reg [2:0] rst_sr;
-    wire fifo_reset; // fifo_reset resets fifos... reset_fifo is a fifo for the reset signal.
-    assign fifo_reset = Reset | (|rst_sr);
+    wire fifo_reset; 
+    assign fifo_reset = rst | (|rst_sr);
     always @(posedge cpu_clk_g) begin
-        rst_sr <= {rst_sr[1:0], Reset};
+        rst_sr <= {rst_sr[1:0], rst};
     end
 
     mt4htf3264hy ddr2(
@@ -169,7 +188,6 @@ module EchoTestbenchCaches();
         .stall      (stall      )
     );
 
-
     Riscv150 DUT(
         .clk(cpu_clk_g),
         .rst(Reset || ~init_done),
@@ -188,8 +206,7 @@ module EchoTestbenchCaches();
         .stall(stall)
     );
 
-    UART          #( .ClockFreq(       ClockFreq))
-                  uart( .Clock(           cpu_clk_g),
+    UART          uart( .Clock(           cpu_clk_g),
                         .Reset(           Reset || ~init_done),
                         .DataIn(          DataIn),
                         .DataInValid(     DataInValid),
@@ -235,72 +252,8 @@ module EchoTestbenchCaches();
       @( posedge cpu_clk_g ) ;
       $display("Got %h", DataOut);
 
-      DataIn = 8'h81;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
       // Add more test cases!
 
-      DataIn = 8'h82;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
-
-      DataIn = 8'h83;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
-
-      DataIn = 8'h84;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
-      
-      DataIn = 8'h85;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
-      
-      DataIn = 8'h86;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      repeat (100) @( posedge cpu_clk_g );
-      
-      DataIn = 8'h87;
-      DataInValid = 1'b1;
-      @( posedge cpu_clk_g ) ;
-      DataInValid = 1'b0;
-      // Wait for something to come back
-      @( posedge DataOutValid ) ;
-      @( posedge cpu_clk_g ) ;
-      $display("Got %h", DataOut);
       $finish();
   end
 

@@ -1,5 +1,5 @@
-#CASES := $(wildcard tests/*.do)    # Simon editted this
-CASES := $(wildcard tests/echo.do)
+CASES := $(wildcard tests/*.do)
+#CASES := $(wildcard tests/echo.do)
 TESTINPUTS := $(wildcard tests/*.input)
 TRANSCRIPT := $(patsubst tests/%.do,results/%.transcript,$(CASES))
 DOFILES := $(patsubst tests/%.do,build/%.do,$(CASES))

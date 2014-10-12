@@ -13,6 +13,7 @@ module CacheTestBench();
     // Test bench generates a reset
     reg Reset;
 
+    // This clock is the 100MHz on-board crystal oscillator, not the CPU clock.
     parameter HalfCycle = 5;
     localparam Cycle = 2*HalfCycle;	
     reg	Clock; // feeds BUF -> usr_clk_g -> pll -> cpu_clk_g
@@ -79,41 +80,60 @@ module CacheTestBench();
     // Modular cache testing procedures
     `include "CacheTestTasks.vh"
 
+    /* The PLL that generates all the clocks.
+    * The global mult/divide ratio is set to 6. The input clk is 100MHz.
+    * Therefore, freq of each output = 600MHz / CLKOUTx_DIVIDE
+    */
     PLL_BASE
     #(
+        .COMPENSATION("SYSTEM_SYNCHRONOUS"),
         .BANDWIDTH("OPTIMIZED"),
-        .CLKFBOUT_MULT(32),
+
+        .CLKFBOUT_MULT(6),
         .CLKFBOUT_PHASE(0.0),
+        .DIVCLK_DIVIDE(1),
+        .REF_JITTER(0.100),
         .CLKIN_PERIOD(10.0),
 
-        .CLKOUT0_DIVIDE(16),
+        `ifdef RISCV_CLK_50
+            .CLKOUT0_DIVIDE(12),
+        `endif `ifdef RISCV_CLK_100
+            .CLKOUT0_DIVIDE(6),
+        `endif
         .CLKOUT0_DUTY_CYCLE(0.5),
         .CLKOUT0_PHASE(0.0),
 
-        .CLKOUT1_DIVIDE(4),
+        .CLKOUT1_DIVIDE(3),
         .CLKOUT1_DUTY_CYCLE(0.5),
         .CLKOUT1_PHASE(0.0),
 
-        .CLKOUT2_DIVIDE(4),
+        .CLKOUT2_DIVIDE(3),
         .CLKOUT2_DUTY_CYCLE(0.5),
         .CLKOUT2_PHASE(0.0),
 
-        .CLKOUT3_DIVIDE(4),
+        .CLKOUT3_DIVIDE(3),
         .CLKOUT3_DUTY_CYCLE(0.5),
         .CLKOUT3_PHASE(90.0),
 
-        .CLKOUT4_DIVIDE(8),
+        .CLKOUT4_DIVIDE(6),
         .CLKOUT4_DUTY_CYCLE(0.5),
         .CLKOUT4_PHASE(0.0),
 
-        .CLKOUT5_DIVIDE(6),
+        .CLKOUT5_DIVIDE(12),
         .CLKOUT5_DUTY_CYCLE(0.5),
-        .CLKOUT5_PHASE(0.0),
-
-        .COMPENSATION("SYSTEM_SYNCHRONOUS"),
-        .DIVCLK_DIVIDE(4),
-        .REF_JITTER(0.100)
+        .CLKOUT5_PHASE(0.0)
     )
+
+    /* Output clocks:
+    * cpu_clk: 50MHz or 100MHz, depending on configuration
+    * clk200: 200MHz
+    * clk0: 200MHz
+    * clk90: 200MHz, 90 deg phase shift
+    * clkdiv0: 100MHz
+    * clk50: 50MHz
+    *
+    * For CP1, only cpu_clk is used. The rest are used for CP2 and CP3.
+    */
     user_clk_pll
     (
         .CLKFBOUT(pll_fb),

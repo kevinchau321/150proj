@@ -11,8 +11,6 @@ lui x1, 0x10000
 addi x1, x1, 0x020
 lui x2, 0x1eadb
 addi x2, x2, 0x0ef
-lui x3, 0x1afeb
-addi x3, x3, 0x0ef
 
 # Set up the base address for loads/stores
 # Base address will be 0x10000000
@@ -22,18 +20,17 @@ lui x10, 0x10000
 sw x1, 0(x10)
 sw x2, 4(x10)
 lw x11, 0(x10)
-sw x3, 8(x10)
 lw x12, 4(x10)
-lw x13, 8(x10)
 
 # Test 1
 bne x1, x11, Error
+
 # Test 2
 addi x7, x7, 0x1
 bne x2, x12, Error
-# Test 3
-addi x7, x7, 0x1
-bne x3, x13, Error
+
+# Add more tests here!
+
 j Pass
 
 Error:

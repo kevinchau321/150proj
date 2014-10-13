@@ -281,7 +281,7 @@ module Memory150(
         .i_wdf_full(i_wdf_full),
         .d_rdf_valid(d_rdf_valid),
         .d_af_full(d_af_full),
-        .d_wdf_full(d_wdf_full),
+        .d_wdf_full(d_wdf_full)
         
         `ifdef CS150_CHKPNT_2
         // Connect the graphics inputs to ground for CP2
@@ -303,7 +303,7 @@ module Memory150(
         .filler_wdf_din(128'b0),
         .pixel_rdf_rd_en(1'b0),
         .pixel_af_wr_en(1'b0), 
-        .pixel_addr_din(31'b0), 
+        .pixel_addr_din(31'b0) 
         `endif     
 
         `ifdef CS150_CHKPNT_3

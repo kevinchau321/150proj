@@ -38,7 +38,7 @@ module ml505top
   inout         IIC_SDA_VIDEO,
 `endif
 
-  output [7:0] GPIO_LED;
+  output [7:0] GPIO_LED
 );
 
   // Define wires

@@ -87,6 +87,11 @@ module Memory150TestBench();
     wire        stall;
     wire        init_done;
 
+    // DVI interface:
+    wire [23:0] video;
+    wire        video_valid;
+    reg         video_ready;
+
     // Modular cache testing procedures
     `include "CacheTestTasks.vh"
 

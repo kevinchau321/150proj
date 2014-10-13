@@ -130,9 +130,9 @@ module EchoTestbenchCaches();
     // for the reset signal.
     reg [2:0] rst_sr;
     wire fifo_reset; 
-    assign fifo_reset = rst | (|rst_sr);
+    assign fifo_reset = Reset | (|rst_sr);
     always @(posedge cpu_clk_g) begin
-        rst_sr <= {rst_sr[1:0], rst};
+        rst_sr <= {rst_sr[1:0], Reset};
     end
 
     mt4htf3264hy ddr2(

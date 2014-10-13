@@ -23,12 +23,6 @@
 # Clock constraints                                                        #
 ############################################################################
 
-# NET "u_ddr2_infrastructure/sys_clk_ibufg" TNM_NET =  "SYS_CLK";
-# TIMESPEC "TS_SYS_CLK" = PERIOD "SYS_CLK" 3.75 ns HIGH 50 %;
-#
-# NET "u_ddr2_infrastructure/clk200_ibufg" TNM_NET = "SYS_CLK_200";
-# TIMESPEC "TS_SYS_CLK_200" = PERIOD "SYS_CLK_200" 5 ns HIGH 50 %;
-
 NET "USER_CLK" TNM_NET = USER_CLK;
 TIMESPEC TS_USER_CLK = PERIOD "USER_CLK" 10 ns HIGH 50%;
 

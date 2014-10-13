@@ -1,9 +1,19 @@
 # TOP, SRC, TEMPLATES are passed in
 # CS150_CHKPNT and RISCV_CLK are also passed in
 SRCS := $(shell find $(SRC) -type f -name '*.v')
-UCF := $(wildcard $(SRC)/$(TOP).ucf)
 
 PART := xc5vlx110t-ff1136-1
+
+# Select the UCF based on the CP number
+ifeq ($(CS150_CHKPNT), CS150_CHKPNT_1)
+UCF := $(wildcard $(SRC)/$(TOP)_cp1.ucf)
+endif
+ifeq ($(CS150_CHKPNT), CS150_CHKPNT_2)
+UCF := $(wildcard $(SRC)/$(TOP)_cp2.ucf)
+endif
+ifeq ($(CS150_CHKPNT), CS150_CHKPNT_3)
+UCF := $(wildcard $(SRC)/$(TOP)_cp3.ucf)
+endif
 
 default: all
 
@@ -38,8 +48,6 @@ NGC_DIRS := $(shell find $(SRC) -type d -exec echo -n "-sd {} " \;)
 
 $(NGDBUILD_OUT): $(XST_OUT) $(UCF)
 	ngdbuild -dd _ngo $(NGC_DIRS) -nt timestamp $(UCF_FLAG) -p $(PART) $(XST_OUT) $@
-
-
 
 #MAP
 MAP_OUT := $(TOP)_map.ncd

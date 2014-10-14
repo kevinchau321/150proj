@@ -55,6 +55,7 @@ module Memory150(
                output        stall
 
             `ifdef CS150_CHKPNT_3
+               ,
                // Cache bypass <=> CPU interface
                input  [31:0] bypass_addr,
                input  [3:0]  bypass_we,
@@ -281,7 +282,7 @@ module Memory150(
         .i_wdf_full(i_wdf_full),
         .d_rdf_valid(d_rdf_valid),
         .d_af_full(d_af_full),
-        .d_wdf_full(d_wdf_full)
+        .d_wdf_full(d_wdf_full),
         
         `ifdef CS150_CHKPNT_2
         // Connect the graphics inputs to ground for CP2

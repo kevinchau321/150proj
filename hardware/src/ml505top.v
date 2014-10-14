@@ -213,7 +213,8 @@ module ml505top
 
   // Only instantiate the caches for CP2 and CP3
   `ifdef CS150_CHKPNT_2_OR_3
-  Memory150 #(.SIM_ONLY(1'b0)) mem_arch(
+  Memory150 #(.SIM_ONLY(1'b0)) mem_arch
+  (
       .cpu_clk_g(cpu_clk_g),
       .clk0_g(clk0_g),
       .clk200_g(clk200_g),
@@ -247,10 +248,13 @@ module ml505top
       .icache_din (icache_din ), 
       .dcache_dout(dcache_dout),
       .icache_dout(instruction),
+      .stall      (stall      )
+
+      `ifdef CS150_CHKPNT_3
+      ,
       .bypass_addr(bypass_addr),
       .bypass_we  (bypass_we  ),
       .bypass_din (bypass_din ),
-      .stall      (stall      ),
       .video      (video      ),
       .video_ready(video_ready),
       .video_valid(video_valid),
@@ -267,6 +271,7 @@ module ml505top
       .line_y1_valid(line_y1_valid),
       .line_trigger(line_trigger),
       .dvi_rst(dvi_rst)
+      `endif
     );
   `endif
   
@@ -279,6 +284,7 @@ module ml505top
     .FPGA_SERIAL_TX(FPGA_SERIAL_TX)
 
     `ifdef CS150_CHKPNT_2_OR_3
+    ,
     .dcache_addr (dcache_addr ),
     .icache_addr (icache_addr ),
     .dcache_we   (dcache_we   ),
@@ -290,7 +296,9 @@ module ml505top
     .dcache_dout (dcache_dout ),
     .instruction (instruction )
     `endif
+
     `ifdef CS150_CHKPNT_3
+    ,
     .filler_color(filler_color),
     .filler_valid(filler_valid),
     .filler_ready(filler_ready),

@@ -19,6 +19,7 @@ module Riscv150(
     // Memory system ports
     // Only used for checkpoint 2 and 3
 `ifdef CS150_CHKPNT_2_OR_3
+    ,
     output [31:0] dcache_addr,
     output [31:0] icache_addr,
     output [3:0] dcache_we,
@@ -34,6 +35,7 @@ module Riscv150(
     // Graphics ports
     // Only used for checkpoint 3
 `ifdef CS150_CHKPNT_3
+    ,
     output [31:0]  bypass_addr,
     output [31:0]  bypass_din,
     output [3:0]   bypass_we,

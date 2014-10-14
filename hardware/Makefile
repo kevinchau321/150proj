@@ -26,6 +26,7 @@ TEMPLATES := cfg
 TARGETS = all synth xst map par timing bitgen impact report schematic schem ise
 
 BUILDDIR := build/$(TOP)
+SIMDIR   := sim
 MAKEFILE := $(BUILDDIR)/Makefile
 MAKEARGS := TOP=$(TOP) SRC=../../$(SRC) TEMPLATES=../../$(TEMPLATES) \
             CS150_CHKPNT="$(CS150_CHKPNT)" RISCV_CLK=$(RISCV_CLK)
@@ -37,7 +38,11 @@ $(MAKEFILE): cfg/Makefile
 	mkdir -p build/$(TOP)
 	cp $< $@
 
+.PHONY: sim
+sim:
+	$(MAKE) -C $(SIMDIR) SIMDEFS="$(RISCV_CLK) $(CS150_CHKPNT)"
+
 clean:
-	rm -rf build
+	rm -rf build $(SIMDIR)/results $(SIMDIR)/build
 
 .PHONY := $(TARGETS) clean

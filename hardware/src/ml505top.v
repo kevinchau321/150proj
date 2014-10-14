@@ -208,6 +208,7 @@ module ml505top
   // For CP1, wire the stall signal to the south switch on the FPGA board
   `ifdef CS150_CHKPNT_1
   assign stall = GPIO_SW_S;
+  assign init_done = 1'b1;
   `endif
 
   // Only instantiate the caches for CP2 and CP3

@@ -11,6 +11,12 @@ STATUS := build/.status
 XILINX_LIBS := unisims_ver unimacro_ver xilinxcorelib_ver secureip
 XILINX_LIB_INC := $(foreach lib,$(XILINX_LIBS),$(addprefix -L ,$(lib)))
 XILINX_LIBS_MAP := $(wildcard /opt/Xilinx/14.6/ISE_DS/ISE/verilog/mti_se/10.2b/lin64/*)
+
+# Compute VDEFINES based on passed-in argument, SIMDEFS
+null      :=
+SPACE     := $(null) $(null)
+VDEFINES  := +define+$(subst $(SPACE),+,$(SIMDEFS))
+
 all: $(TRANSCRIPT)
 
 compile: $(STATUS)
@@ -25,11 +31,11 @@ build/Makefile:
 	(cd build; for file in $(XILINX_LIBS_MAP); do \
 	vmap $$(basename $$file) $$file || exit 1; done)
 	(cd build; \
-	vlog +acc -vopt -source -nocovercells  \
+	vlog +acc -vopt -source -nocovercells \
 	/opt/Xilinx/14.6/ISE_DS/ISE/verilog/src/glbl.v \
 	|| exit 1)
 	(cd build; for file in $(SRCS); do \
-	vlog +acc -vopt -source -nocovercells $(INC) ../$$file || exit 1; done)
+	vlog +acc -vopt -source -nocovercells $(VDEFINES) $(INC) ../$$file || exit 1; done)
 	(cd build; vmake > Makefile)
 
 results:

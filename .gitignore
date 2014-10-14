@@ -28,6 +28,5 @@ hardware/sim/results/
 *gen_readme.txt
 *.elf
 *.swp
-*.dont
 *~
 hardware/sim2

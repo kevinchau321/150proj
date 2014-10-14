@@ -282,9 +282,10 @@ module Memory150(
         .i_wdf_full(i_wdf_full),
         .d_rdf_valid(d_rdf_valid),
         .d_af_full(d_af_full),
-        .d_wdf_full(d_wdf_full),
+        .d_wdf_full(d_wdf_full)
         
         `ifdef CS150_CHKPNT_2
+        ,
         // Connect the graphics inputs to ground for CP2
         // Inputs for checkpoint 3 (graphics)
         .line_addr_din(31'b0), 
@@ -308,6 +309,7 @@ module Memory150(
         `endif     
 
         `ifdef CS150_CHKPNT_3
+        ,
         // Inputs for checkpoint 3 (graphics)
         .line_addr_din(line_addr_din), 
         .line_af_wr_en(line_af_wr_en),          

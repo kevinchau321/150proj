@@ -19,6 +19,24 @@ module RegFile(input clk,
                input  [31:0] wd,
                output [31:0] rd1, rd2);
 
-    // Implement your register file here, then delete this comment.
+   reg [31:0] 		     r[0:31];
+   reg 			     wr_enable;   
+   always @(*)
+     if (!wr_enable) begin
+	rd1 = r[ra1];
+	rd2 = r[ra2];
+     end 
+     else if (r[wa] == wd) begin // Write enable is true, so check if the write destination has been written
+	rd1 = r[ra1];
+	rd2 = r[ra2];
+     end
+    end  
+    always @(posedge clk) begin
+       if (we) begin
+	  wr_enable <= 1'b1;
+	  r[wa] <= wd; // Read is disabled during writes
+	  wr_enable <= 1'b0;
+       end
+    end  
 
 endmodule

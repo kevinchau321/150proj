@@ -7,7 +7,7 @@
 module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb, output [31:0] inst_addra, output dina, output branch_taken, input data_forward_ALU1, input data_forward_ALU2, input PC_sel, input dmem_out, input UART_out);
 
    wire       RegWr; // Write enable  for RegFile.v
-   wire [4:0] rs1, rs2, wa;
+   wire [4:0] rs1, rs2, rd;
    wire [31:0] rd1, rd2; // Read Data from RegFile.v
    wire [31:0] fwd_x1,fwd_x2,fwd_m1,fwd_m2; // Data forwarding wires - x means from ALU Execute stage, m means from Memory stage
    wire [3:0] bitmask, op;
@@ -25,8 +25,13 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
    reg [31:0] pipeline2_ALUout; 
    reg [31:0] pipeline2_dmem_in;
    reg [31:0] pipeline2_dmem_data;
-   reg [31:0] pipeline1_loadoffsetaddr;
+   reg [31:0] pipeline1_loadc125m-6 [1001] ~/fa14_team11 # 
+offsetaddr;
    
+   reg [4:0] rdX;
+   reg [4:0] rdM;
+
+
    // Instruction De-Mux
    assign rtype_funct7 = inst_doutb[31:25];
    assign funct = inst_doutb[14:12];
@@ -39,7 +44,7 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
    // Register Wires
    assign rs1 = imem_mem[19:15];
    assign rs2 = imem_mem[24:20];
-   assign wa = imem_mem[11:7];
+   assign rd = imem_mem[11:7];
 
    assign dina = ALUout;
    assign signed_itype_imm = {itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm};
@@ -54,13 +59,13 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
 	.we(RegWr), 
 	.ra1(rs1), 
 	.ra2(rs2), 
-	.wa(wa), 
+	.wa(rdM), 
 	.wd(wb_val), 
 	.rd1(rd1), 
 	.rd2(rd2));	
 
    LoadOffsetToAddr lota (.addr(rd1),
-			.offset((opcode == 7'b0000011)? itype_imm: {rtype_funct7, wa}),
+			.offset((opcode == 7'b0000011)? itype_imm: {rtype_funct7, rd}),
 			.load_addr(load_addr));
 
    
@@ -68,8 +73,8 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
    	case (PC_sel)
      		0: PC <= PC;
      		1: PC <= PC + 4;
-     		2: PC <= 0;
-     		3: PC <= target_addr;
+     		2: PC <= target_addr;
+     		3: PC <= 0;
    	endcase
       
       case (opcode)  
@@ -85,7 +90,8 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
 	   dmem_offset <= itype_imm;
 	end
 	7'b0100011: begin // Store instruction
-	   dmem_offset <= stype_imm;
+	   dmem_offset <= sc125m-6 [1001] ~/fa14_team11 # 
+type_imm;
 	end
       endcase
        
@@ -116,12 +122,14 @@ module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb
 	pipeline1_ALUinputB <= ALU_inputB;
 	pipeline1_npc <= PC + 4;
 	pipeline1_loadoffsetaddr <= load_addr;
+	rdX <= rd;
+
 
 	// Pipelining Stage 2
 	pipeline2_npc <= pipeline1_npc;
 	pipeline2_ALUout <= ALUout;
 	pipeline2_dmem_in <= pipeline1_loadoffsetaddr;
 	pipeline2_dmem_data <= pipeline1_ALUinputB;
-
+	rdM <= rdX;
    end
 endmodule   

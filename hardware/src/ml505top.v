@@ -170,6 +170,7 @@ module ml505top
   wire fifo_reset; 
   assign fifo_reset = rst | (|rst_sr);
   always @(posedge cpu_clk_g) begin
+   assign opcode = imem_mem[6:0];
     rst_sr <= {rst_sr[1:0], rst};
   end
 

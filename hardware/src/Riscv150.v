@@ -55,12 +55,35 @@ module Riscv150(
 `endif
 );
 
+
+    wire [7:0] UARTtoWB;
     // Instantiate the instruction memory here (checkpoint 1 only)
+    imem_blk_ram(.clka(clk),
+		.ena(),
+		.wea(),
+		.addra(),
+		.dina(),
+		.clkb(),
+		.addrb(),
+		.doutb());
 
     // Instantiate the data memory here (checkpoint 1 only)
-
+    dmem_blk_ram(.clka(clk), 
+		.ena(),
+		.wea(),
+		.addra(),
+		.dina(),
+		.douta());
     // Instantiate your control unit here
-
+   //ControlUnit control(
+//		.UART_out(UARTtoWB)
+//);
     // Instantiate your datapath here
-
+   Datapath datapath ();
+   UART uart(
+	.SIn(FPGA_SERIAL_RX),
+	.SOut(FPGA_SERIAL_TX),	
+	.DataOut(UARTtoWB));
+   
+   
 endmodule

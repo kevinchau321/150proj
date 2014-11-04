@@ -19,8 +19,12 @@ module ALUdec(
 	      output itype
 );
 
+   reg 		     itypeReg;
+
+   assign itype = itypeReg;
+   
   always @(*) begin
-     itype = 1'b0;
+     itypeReg = 1'b0;
      case (opcode)
        7'b0110111: // LUI
 	 ALUop = `ALU_COPY_B;
@@ -61,7 +65,7 @@ module ALUdec(
 	   3'b111:
 	     ALUop = `ALU_AND;
 	 endcase // case (funct)
-	itype = 1'b1;
+	itypeReg = 1'b1;
        end
        7'b0110011:
 	 case (funct)

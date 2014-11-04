@@ -17,16 +17,17 @@ module Datapath ( input Clock,
 		  input dmem_out, 
 		  input UART_out);
 
-   wire       RegWr; // Write enable  for RegFile.v
+   wire       RegWrite; // Write enable  for RegFile.v
    wire [4:0] rs1, rs2, rd;
    wire [31:0] rd1, rd2; // Read Data from RegFile.v
    wire [31:0] fwd_x1,fwd_x2,fwd_m1,fwd_m2; // Data forwarding wires - x means from ALU Execute stage, m means from Memory stage
    wire [3:0] bitmask, op;
    wire [11:0] target_addr;
+   wire [31:0]      ALUout;
    reg [31:0] PC;
    reg [31:0] wd; 
-   reg branch_taken;
-   wire [1:0] PC_sel;
+   reg is_branch_inst;
+   wire [1:0] PC_muxselect;
    wire [31:0] load_addr;
    reg [31:0] pipeline1_sign_ext;
    reg [31:0] pipeline1_ALUinputA;
@@ -36,12 +37,14 @@ module Datapath ( input Clock,
    reg [31:0] pipeline2_ALUout; 
    reg [31:0] pipeline2_dmem_in;
    reg [31:0] pipeline2_dmem_data;
-   reg [31:0] pipeline1_loadc125m-6 [1001] ~/fa14_team11 # 
-offsetaddr;
+   reg [31:0] pipeline1_loadoffsetaddr;
    
    reg [4:0] rdX;
    reg [4:0] rdM;
 
+   assign RegWrite = RegWr;
+   assign is_branch_inst = branch_taken;
+   assign PC_muxselect = PC_sel;
 
    // Instruction De-Mux
    assign rtype_funct7 = inst_doutb[31:25];
@@ -53,11 +56,11 @@ offsetaddr;
    assign stype_imm = {inst_doutb[31:25],inst_doutb[11:7]};
    
    // Register Wires
-   assign rs1 = imem_mem[19:15];
-   assign rs2 = imem_mem[24:20];
-   assign rd = imem_mem[11:7];
+   assign rs1 = inst_doutb[19:15];
+   assign rs2 = inst_doutb[24:20];
+   assign rd = inst_doutb[11:7];
 
-   assign dina = ALUout;
+   assign ALUout = dina;
    assign signed_itype_imm = {itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm[11],itype_imm};
    assign zero_ext_shamt = {27'b0,shamt};
 
@@ -67,7 +70,7 @@ offsetaddr;
 	   .Out(ALUout);
 
    RegFile register_file (.clk(Clock), 
-	.we(RegWr), 
+	.we(RegWrite), 
 	.ra1(rs1), 
 	.ra2(rs2), 
 	.wa(rdM), 
@@ -81,7 +84,7 @@ offsetaddr;
 
    
    always @(posedge Clock) begin
-   	case (PC_sel)
+   	case (PC_muxselect)
      		0: PC <= PC;
      		1: PC <= PC + 4;
      		2: PC <= target_addr;
@@ -105,18 +108,18 @@ offsetaddr;
 	end
       endcase
        
-      BranchCheckX branch_check (branch_taken, funct, rs1, rs2);
+      BranchCheckX branch_check (is_branch_inst, funct, rs1, rs2);
 
       case (data_forward_ALU1)
-	0: ALU_inputA <= rs1;
-	1: ALU_inputA <= fwd_x1;
-	2: ALU_inputA <= fwd_m1;
+	0: pipeline1_ALUinputA <= rs1;
+	1: pipeline1_ALUinputA <= fwd_x1;
+	2: pipeline1_ALUinputA <= fwd_m1;
       endcase // case (data_forward_ALU1)
 
       case (data_forward_ALU2)
-	0: ALU_inputB <= rs2;
-	1: ALU_inputB <= fwd_x2;
-	2: ALU_inputB <= fwd_m2;
+	0: pipeline1_ALU_inputB <= rs2;
+	1: pipeline1_ALUinputB <= fwd_x2;
+	2: pipelin1_ALUinputB <= fwd_m2;
 	endcase	
 
       case (MemToReg)

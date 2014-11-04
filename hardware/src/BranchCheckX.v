@@ -21,5 +21,5 @@ module BranchCheckX (
 			3'b111: //BGEU rs1 >= rs2
 				branch_taken = ($unsigned(rs1) >= $unsigned(rs2));
 		endcase
-
+	   end
 endmodule

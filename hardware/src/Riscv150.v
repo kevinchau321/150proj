@@ -57,33 +57,67 @@ module Riscv150(
 
 
     wire [7:0] UARTtoWB;
+    wire [11:0] inst_addra; // Instruction address wire from IMEM_BLK_RAM to DATAPATH
+    wire [1:0] PC_sel;
+    wire [31:0] imem_dout;
+
     // Instantiate the instruction memory here (checkpoint 1 only)
     imem_blk_ram(.clka(clk),
-		.ena(),
-		.wea(),
-		.addra(),
-		.dina(),
-		.clkb(),
-		.addrb(),
-		.doutb());
+		.ena(0),
+		.wea(0),
+		.addra(inst_addra),
+		.dina(0),
+		.clkb(0),
+		.addrb(0),
+		.doutb(imem_dout));
 
     // Instantiate the data memory here (checkpoint 1 only)
     dmem_blk_ram(.clka(clk), 
-		.ena(),
-		.wea(),
-		.addra(),
-		.dina(),
-		.douta());
+		.ena(0),
+		.wea(0),
+		.addra(0),
+		.dina(0),
+		.douta(0));
     // Instantiate your control unit here
-   //ControlUnit control(
-//		.UART_out(UARTtoWB)
-//);
+   ControlUnit control(.clk(clk),
+	.opcode(0),
+	.funct3(0),
+	.funct7(0),
+	.branch_taken(0),
+	.rs1(0),
+	.rs2(0),
+	.rd(0),
+	.ALUopX(0),
+	.PCsrcM(PC_sel),
+	.ALUsrcAX(0),
+	.ALUsrcBX(0),
+	.wbsrcM(0),
+	.StallD(0),
+	.RegWrM(0));
+
     // Instantiate your datapath here
-   Datapath datapath ();
-   UART uart(
+   Datapath datapath (.Clock(clk),
+	.Reset(rst),
+	.RegWr(0),
+	.inst_doutb(imem_dout),
+	.inst_addra(inst_addra),
+	.dina(0),
+	.branch_taken(0),
+	.data_forward_ALU1(0),
+	.data_forward_ALU2(0),
+	.PC_sel(PC_sel),
+	.dmem_out(0),
+	.UART_out(UARTtoWD));
+
+   // Instantiate UART module
+   UART uart(.Clock(clk),
+	.Reset(rst),
+	.DataInValid(0),
+	.DataInReady(0),
 	.SIn(FPGA_SERIAL_RX),
 	.SOut(FPGA_SERIAL_TX),	
-	.DataOut(UARTtoWB));
+	.DataOut(UARTtoWB),
+	.DataOutValid(0));
    
    
 endmodule

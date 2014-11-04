@@ -1,4 +1,4 @@
-`include "ALUdec.v";
+`include "ALUdec.v"
 
 module ControlUnit(
 	input clk,
@@ -14,27 +14,15 @@ module ControlUnit(
 	output [2:0] ALUsrcAX,
 	output [1:0] ALUsrcBX,
 	output wbsrcM,
-	output StallD,
-	output RegWrM;)
+	output Stall,
+        output RegWrM);
+   
 
 	//HAZARD CONTROL
 	reg [6:0] prevOpcode;
-	reg [4:0] prevrs1, prevrs2m prevrd;
-	always @(posedge clk) begin
-		prevOpcode <= opcode;
-		prevrs1 <= rs1;
-		prevrs2 <= rs2;	
-		prevrd <= rd;
-	end
+	reg [4:0] prevrs1, prevrs2, prevrd;
 
-	assign ALUopX = ALUopXreg;
-	assign ALUsrcAX = ALUsrcAXreg;
-	assign ALUsrcBX = ALUsrcBXreg;
-	assign PCsrcM = PCsrcMreg;
-	assign wbsrcM = wbsrcMreg;
-	assign StallM = StallMreg;
-	assign RegWrM = RegWrMreg;
-
+        
 	reg [3:0] ALUopDreg;
 	reg [3:0] ALUopXreg;
 	reg [3:0] ALUopMreg;
@@ -55,11 +43,27 @@ module ControlUnit(
 	reg wbsrcXreg;
 	reg wbsrcMreg;
 
-	reg StallDreg;
+	reg StallReg;
 	
 	reg RegWrDreg;
 	reg RegWrXreg;
 	reg RegWrMreg;
+   
+	always @(posedge clk) begin
+		prevOpcode <= opcode;
+		prevrs1 <= rs1;
+		prevrs2 <= rs2;	
+		prevrd <= rd;
+	end
+
+	assign ALUopX = ALUopXreg;
+	assign ALUsrcAX = ALUsrcAXreg;
+	assign ALUsrcBX = ALUsrcBXreg;
+	assign PCsrcM = PCsrcMreg;
+	assign wbsrcM = wbsrcMreg;
+	assign Stall = StallReg;
+	assign RegWrM = RegWrMreg;
+
 
 	//pipline registers
 	always @(posedge clk) begin
@@ -79,7 +83,7 @@ module ControlUnit(
 		wbsrcMreg <= wbsrcXreg;
 
 		RegWrXreg <= RegWrDreg;
-		RegWrMreg <= RegXreg;	
+		RegWrMreg <= RegWrXreg;	
 	end
 
 	
@@ -92,9 +96,8 @@ module ControlUnit(
 	always @ (posedge clk) begin
 		if (branch_taken || opcode == 7'b1101111 || opcode == 7'b1100111) begin			//jump or branch
 			PCsrcDreg <= 3;	//target address for branch
-			StallDreg <= 1;
+			StallReg <= 1;
 		end else begin
-			case (opcode)
 				if ((prevrd==rs1 || prevrd==rs2)&&(prevOpcode==0110011 && opcode == 0110011)) begin	//DATA HAZARD
 					if (rs1 == prevrd) begin
 						ALUsrcADreg <= 3; //FWDX FROM ALU RESULT OF PREVIIOUS INSTRUCTION
@@ -105,45 +108,52 @@ module ControlUnit(
 					end
 					RegWrDreg <= 1;
 					PCsrcDreg <= 1;
-					StallDreg <= 0;
+					StallReg <= 0;
 					wbsrcDreg <= 1; //ALU RESULTS
 				end else if (prevOpcode==0000011) begin //LOAD HAZARD
-					StallDReg <= 1;			//stall in a NOP for the current instruction
+					StallReg <= 1;			//stall in a NOP for the current instruction
 					PCsrcDreg <= 0;			//reuses the instruction after load
 					RegWrDreg <= 0;
 				end else begin				//NO HAZARDS
-					7'b0110011: 	//R-Type 
+				   case (opcode)
+					7'b0110011: begin	//R-Type 
 						RegWrDreg <= 1; 
 						ALUsrcADreg <= 4;	//rd1 from reg
 						ALUsrcBDreg <= 0;	//rd2 from reg
 						PCsrcDreg <= 1;     //PC + 4;
 						wbsrcDreg <= 1;     //ALUresult
-						StallDreg <= 0;	    //no stall
-					7'b0010011: 	//shift
+						StallReg <= 0;	    //no stall
+					   end
+					7'b0010011: begin 	//shift
 						RegWrDreg <= 1 ; 
 						ALUsrcADreg <= 1;	//shamt	
 						ALUsrcBDreg <= 0;	
 						PCsrcDreg <= 1; 
 						wbsrcDreg <= 1;  
 						RegWrDreg <= 1;	   
-						StallDreg <= 0;	 
-					7'b0000011:	//LOAD			NEEDS TO STALL NEXT INSTRUCTION
+						StallReg <= 0;
+					   end
+					7'b0000011: begin	//LOAD			NEEDS TO STALL NEXT INSTRUCTION
 						RegWrDreg <= 1;
 						ALUsrcADreg <= 4;
 						ALUsrcBDreg <= 0;
 						PCsrcDreg <= 1;
 						wbsrcDreg <= 2;  
 						RegWrDreg <= 1;	   
-						StallDreg <= 0;	 
-					7'b1100011: //Branch
+						StallReg <= 0;	
+					   end
+					7'b1100011: begin //Branch
 						RegWrDreg <= 0;
 						ALUsrcADreg <= 4;
 						ALUsrcBDreg <= 0;
 						PCsrcDreg <= 1;
 						wbsrcDreg <= 0; //doesn't matter
-						StallDreg <= 0;
-				end
-			endcase
-		end
-
+						StallReg <= 0;
+					end
+				   endcase
+				end // else: !if(prevOpcode==0000011)
+		end // else: !if(branch_taken || opcode == 7'b1101111 || opcode == 7'b1100111)
+	   
+	end // always @ (posedge clk)
+   
 endmodule

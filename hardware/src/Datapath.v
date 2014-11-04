@@ -4,7 +4,18 @@
  * BRANCH_TAKEN is a 1 bit control signal if the Branch instruction is passed
  */
 
-module Datapath ( input Clock, input Reset, input RegWr, input [31:0] inst_doutb, output [31:0] inst_addra, output dina, output branch_taken, input data_forward_ALU1, input data_forward_ALU2, input PC_sel, input dmem_out, input UART_out);
+module Datapath ( input Clock, 
+		  input Reset, 
+		  input RegWr, 
+		  input [31:0] inst_doutb, 
+		  output [31:0] inst_addra, 
+		  output dina, 
+		  output branch_taken, 
+		  input data_forward_ALU1, 
+		  input data_forward_ALU2, 
+		  input PC_sel, 
+		  input dmem_out, 
+		  input UART_out);
 
    wire       RegWr; // Write enable  for RegFile.v
    wire [4:0] rs1, rs2, rd;
@@ -90,8 +101,7 @@ offsetaddr;
 	   dmem_offset <= itype_imm;
 	end
 	7'b0100011: begin // Store instruction
-	   dmem_offset <= sc125m-6 [1001] ~/fa14_team11 # 
-type_imm;
+	   dmem_offset <= itype_imm;
 	end
       endcase
        

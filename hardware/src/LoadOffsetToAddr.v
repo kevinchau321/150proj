@@ -4,7 +4,7 @@
 
 module LoadOffsetToAddr (input [31:0] addr, 
 			input [11:0] offset, 
-			output [31:0] load_addr) begin
+			 output [31:0] load_addr);
 
 	wire signed_offset = {offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset[11],offset};
 	assign load_addr = addr + offset;

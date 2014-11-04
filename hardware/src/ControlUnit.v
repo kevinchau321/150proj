@@ -1,4 +1,3 @@
-`include "ALUdec.v"
 
 module ControlUnit(
 	input clk,

@@ -23,15 +23,17 @@ module RegFile(input clk,
    assign rd1 = rd1reg;
    assign rd2 = rd2reg;
    reg [31:0] 		     r[0:31];
-   reg 			     wr_enable;   
+   reg 			     wr_enable; 
+
+   initial r[0] = 32'b0;  
    always @(*) begin
      if (!wr_enable) begin
-	rd1reg <= r[ra1];
-	rd2reg <= r[ra2];
+	rd1reg = r[ra1];
+	rd2reg = r[ra2];
      end 
      else if (r[wa] == wd) begin // Write enable is true, so check if the write destination has been written, if so, then allow read
-	rd1reg <= r[ra1];
-	rd2reg <= r[ra2];
+	rd1reg = r[ra1];
+	rd2reg = r[ra2];
      end
    end  
     always @(posedge clk) begin

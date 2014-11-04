@@ -1,3 +1,5 @@
+
+
 /**
  * INST_DOUTB is the data out from the instruction memory block ram
  * INST_ADDRA is the input address to the instruction memory block ram
@@ -15,18 +17,24 @@ module Datapath ( input Clock,
 		  input data_forward_ALU2, 
 		  input PC_sel, 
 		  input dmem_out, 
-		  input UART_out);
+		  input UART_out,
+		  input wbsrc);
 
    wire       RegWrite; // Write enable  for RegFile.v
    wire [4:0] rs1, rs2, rd;
    wire [31:0] rd1, rd2; // Read Data from RegFile.v
    wire [31:0] fwd_x1,fwd_x2,fwd_m1,fwd_m2; // Data forwarding wires - x means from ALU Execute stage, m means from Memory stage
    wire [3:0] bitmask, op;
-   wire [11:0] target_addr;
+   wire [31:0] writeback_wire;
    wire [31:0]      ALUout;
-   reg [31:0] PC;
-   reg [31:0] wd; 
-   reg is_branch_inst;
+   wire [11:0]	    itype_imm;
+   
+
+   reg [11:0] 	    target_addr;  
+   reg [31:0] 	    PC;
+   reg [31:0] wd;
+   reg [31:0] wb_val;
+   wire is_branch_inst;
    wire [1:0] PC_muxselect;
    wire [31:0] load_addr;
    reg [31:0] pipeline1_sign_ext;
@@ -67,21 +75,21 @@ module Datapath ( input Clock,
    ALU alu(.A(rs1out),
 	   .B(rs2out),
 	   .ALUop(op),
-	   .Out(ALUout);
+	   .Out(ALUout));
 
    RegFile register_file (.clk(Clock), 
 	.we(RegWrite), 
 	.ra1(rs1), 
 	.ra2(rs2), 
 	.wa(rdM), 
-	.wd(wb_val), 
+	.wd(writeback_wire), 
 	.rd1(rd1), 
 	.rd2(rd2));	
 
    LoadOffsetToAddr lota (.addr(rd1),
 			.offset((opcode == 7'b0000011)? itype_imm: {rtype_funct7, rd}),
 			.load_addr(load_addr));
-
+ BranchCheckX branch_check(is_branch_inst, funct, rs1, rs2);
    
    always @(posedge Clock) begin
    	case (PC_muxselect)
@@ -100,29 +108,23 @@ module Datapath ( input Clock,
 	 target_addr <= (rd1 + itype_imm) & 32'hFFFFFFFE;
 	 wb_val <= PC + 4; 
 	end
-	7'b0000011: begin // Load instruction
-	   dmem_offset <= itype_imm;
-	end
-	7'b0100011: begin // Store instruction
-	   dmem_offset <= itype_imm;
-	end
       endcase
        
-      BranchCheckX branch_check (is_branch_inst, funct, rs1, rs2);
+   
 
       case (data_forward_ALU1)
-	0: pipeline1_ALUinputA <= rs1;
+	0: pipeline1_ALUinputA <= rd1;
 	1: pipeline1_ALUinputA <= fwd_x1;
 	2: pipeline1_ALUinputA <= fwd_m1;
       endcase // case (data_forward_ALU1)
 
       case (data_forward_ALU2)
-	0: pipeline1_ALU_inputB <= rs2;
+	0: pipeline1_ALUinputB <= rd2;
 	1: pipeline1_ALUinputB <= fwd_x2;
-	2: pipelin1_ALUinputB <= fwd_m2;
+	2: pipeline1_ALUinputB <= fwd_m2;
 	endcase	
 
-      case (MemToReg)
+      case (wbsrc)
 	0: wb_val <= PC+4;	//from Execute Stage
 	1: wb_val <= ALUout;
 	2: wb_val <= dmem_out;
@@ -131,8 +133,6 @@ module Datapath ( input Clock,
 
 	// Pipelining Stage 1
 	pipeline1_sign_ext <= signed_itype_imm;
-	pipeline1_ALUinputA <= ALU_inputA;
-	pipeline1_ALUinputB <= ALU_inputB;
 	pipeline1_npc <= PC + 4;
 	pipeline1_loadoffsetaddr <= load_addr;
 	rdX <= rd;

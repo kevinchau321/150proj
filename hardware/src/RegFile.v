@@ -24,8 +24,14 @@ module RegFile(input clk,
    assign rd2 = rd2reg;
    reg [31:0] 		     r[0:31];
    reg 			     wr_enable; 
+   integer i;
+   
+   initial begin
+   	for (i=0; i<32; i=i+1) begin 
+		r[i] = 32'b0;
+   	end 
+   end 
 
-   initial r[0] = 32'b0;  
    always @(*) begin
      if (!wr_enable) begin
 	rd1reg = r[ra1];

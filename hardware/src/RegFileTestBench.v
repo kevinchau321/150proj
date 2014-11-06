@@ -86,7 +86,7 @@ module RegFileTestBench();
 		#(Cycle);
 		wr_en = 0;
 		read_addr1 = 0;
-		read_addr2 = 2;
+		read_addr2 = 4;
 		#(Cycle);
 		DUTout = read_data1;
 		REFout = 0;

@@ -57,57 +57,82 @@ module Riscv150(
 
 
     wire [7:0] UARTtoWB;
-    wire [11:0] inst_addra; // Instruction address wire from IMEM_BLK_RAM to DATAPATH
+    wire [11:0] addra;
     wire [1:0] PC_sel;
     wire [31:0] imem_dout;
+    wire branch_taken;
+    wire [3:0] op;
+    wire [31:0] PC;
+    wire [31:0] dina;
+    wire [31:0] dmem_out;
+    wire [1:0] ALUsrcA;
+    wire [2:0] ALUsrcB;
+    wire RegWrite;
+    wire wbsrc;
+    wire [31:0] instruction;
+    wire [31:0] memaddr;
+    wire [3:0] ibitmask, dbitmask;
+    wire ien;
+    wire den;
+
+    assign instruction = stall ? 32'b00000000000000000000 : imem_dout;
+
 
     // Instantiate the instruction memory here (checkpoint 1 only)
     imem_blk_ram(.clka(clk),
-		.ena(0),
-		.wea(0),
-		.addra(inst_addra),
-		.dina(0),
-		.clkb(0),
-		.addrb(0),
+		.ena(ien),		//ENABLES READS AND WRITES FOR IMEM
+		.wea(ibitmask),
+		.addra(addra),
+		.dina(dina),
+		.clkb(clk),
+		.addrb(PC[11:0]),
 		.doutb(imem_dout));
 
     // Instantiate the data memory here (checkpoint 1 only)
     dmem_blk_ram(.clka(clk), 
-		.ena(0),
-		.wea(0),
-		.addra(0),
-		.dina(0),
-		.douta(0));
+		.ena(den),
+		.wea(dbitmask),
+		.addra(addra),
+		.dina(dina),
+		.douta(dmem_out));
     // Instantiate your control unit here
    ControlUnit control(.clk(clk),
-	.opcode(0),
-	.funct3(0),
-	.funct7(0),
-	.branch_taken(0),
-	.rs1(0),
-	.rs2(0),
-	.rd(0),
-	.ALUopX(0),
+	.opcode(imem_dout[6:0]),
+	.funct3(imem_dout[14:12]),
+	.funct7(imem_dout[31:25]),
+	.branch_taken(branch_taken),
+	.rs1(imem_dout[19:5]),
+	.rs2(imem_dout[24:20]),
+	.rd(imem_dout[11:7]),
+	.ALUopX(op),
 	.PCsrcM(PC_sel),
-	.ALUsrcAX(0),
-	.ALUsrcBX(0),
-	.wbsrcM(0),
-	.StallD(0),
-	.RegWrM(0));
+	.ALUsrcAX(ALUsrcA),
+	.ALUsrcBX(ALUsrcB),
+	.wbsrcM(wbsrc),
+	.Stall(stall),
+	.RegWrM(RegWrite),
+	.memaddr(memaddr),
+	.ibitmask(ibitmask),
+	.dbitmask(dbitmask),
+	.imem_en(ien),
+	.dmem_en(den));
 
     // Instantiate your datapath here
    Datapath datapath (.Clock(clk),
 	.Reset(rst),
-	.RegWr(0),
-	.inst_doutb(imem_dout),
-	.inst_addra(inst_addra),
-	.dina(0),
-	.branch_taken(0),
-	.data_forward_ALU1(0),
-	.data_forward_ALU2(0),
+	.RegWr(RegWrite),
+	.inst_doutb(instruction),
+	.mem_addr(addra),
+	.dina(dina),
+	.branch_taken(branch_taken),
+	.data_forward_ALU1(ALUsrcA),
+	.data_forward_ALU2(ALUsrcB),
 	.PC_sel(PC_sel),
-	.dmem_out(0),
-	.UART_out(UARTtoWD));
+	.dmem_out(dmem_out),
+	.UART_out(UARTtoWD),
+	.ALUop(op),
+	.PC(PC),
+	.memaddrD(memaddr));
 
    // Instantiate UART module
    UART uart(.Clock(clk),

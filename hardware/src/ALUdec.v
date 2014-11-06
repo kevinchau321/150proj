@@ -43,9 +43,9 @@ module ALUdec(
        7'b0010011: begin // I-Type 
 	  case (funct)
 	   3'b000:
-	     if (add_rshift_type)
-	       ALUop = `ALU_SUB;
-	     else
+	     //if (add_rshift_type)
+	       //ALUop = `ALU_SUB;
+	     //else
 	       ALUop = `ALU_ADD;
 	   3'b001:
 	     ALUop = `ALU_SLL;
@@ -70,9 +70,9 @@ module ALUdec(
        7'b0110011:
 	 case (funct)
 	   3'b000:
-	     if (add_rshift_type)
-	       ALUop = `ALU_SUB;
-	     else
+	     //if (add_rshift_type)
+	       //ALUop = `ALU_SUB;
+	     //else
 	       ALUop = `ALU_ADD;
 	   3'b001:
 	     ALUop = `ALU_SLL;
@@ -92,28 +92,28 @@ module ALUdec(
 	   3'b111:
 	     ALUop = `ALU_AND;
 	 endcase // case (funct)
-       7'b0010011:
-	 case (funct)
-	   3'b000:
-	     ALUop = `ALU_ADD;
-	   3'b001:
-	     ALUop = `ALU_SLL;
-	   3'b010:
-	     ALUop = `ALU_SLT;
-	   3'b011:
-	     ALUop = `ALU_SLTU;
-	   3'b100:
-	     ALUop = `ALU_XOR;
-	   3'b101:
-	     if (add_rshift_type)
-	       ALUop = `ALU_SRA;
-	     else
-	       ALUop = `ALU_SRL;
-	   3'b110:
-	     ALUop = `ALU_OR;
-	   3'b111:
-	     ALUop = `ALU_AND;
-	 endcase // case (funct)
+       //7'b0010011:
+	 //case (funct)
+	   //3'b000:
+	    // ALUop = `ALU_ADD;
+	  // 3'b001:
+	   //  ALUop = `ALU_SLL;
+	   //3'b010:
+	   //  ALUop = `ALU_SLT;
+	  // 3'b011:
+	  //   ALUop = `ALU_SLTU;
+	  // 3'b100:
+	 //    ALUop = `ALU_XOR;
+	  // 3'b101:
+	 //    if (add_rshift_type)
+	//       ALUop = `ALU_SRA;
+	//     else
+	//      ALUop = `ALU_SRL;
+	//   3'b110:
+	 //    ALUop = `ALU_OR;
+	//   3'b111:
+	//     ALUop = `ALU_AND;
+	// endcase // case (funct)
        default:
 	 ALUop = `ALU_XXX;
        

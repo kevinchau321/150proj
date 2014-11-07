@@ -72,7 +72,7 @@ module imem_blk_ram(
 
 
 input clka;
-input ena;	//for read and write
+input ena;
 input [3 : 0] wea;
 input [11 : 0] addra;
 input [31 : 0] dina;

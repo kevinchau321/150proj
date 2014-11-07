@@ -24,7 +24,12 @@ module EchoTestbench();
 
     // Instantiate your Riscv CPU here and connect the FPGA_SERIAL_TX wires
     // to the UART we use for testing
-
+    Riscv150 cpu (.clk(Clock),
+		  .rst(Reset),
+		  .stall(0),
+		  .FPGA_SERIAL_RX(FPGA_SERIAL_RX),
+		  .FPGA_SERIAL_TX(FPGA_SERIAL_TX));
+   
 
     // Instantiate the UART
     UART          uart( .Clock(           Clock),

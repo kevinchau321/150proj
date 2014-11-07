@@ -56,7 +56,7 @@ module Riscv150(
 );
 
 
-    wire [7:0] UARTtoWB;
+    wire [31:0] UARTtoWB;
     wire [11:0] addra;
     wire [1:0] PC_sel;
     wire [31:0] imem_dout;
@@ -68,18 +68,26 @@ module Riscv150(
     wire [1:0] ALUsrcA;
     wire [2:0] ALUsrcB;
     wire RegWrite;
-    wire wbsrc;
+    wire [1:0] wbsrc;
     wire [31:0] instruction;
     wire [31:0] memaddr;
     wire [3:0] ibitmask, dbitmask;
     wire ien;
     wire den;
+    wire ctrl_stall;
+    wire UARTReady, UARTValid;
+    wire [7:0] UART_DataIn;
 
-    assign instruction = stall ? 32'b00000000000000000000 : imem_dout;
+   reg [31:0] UARTtoWBReg;
+   reg [7:0] UART_DataInReg;
+   
+    assign UARTtoWB = UARTtoWBReg;
+    assign UART_DataIn = UART_DataInReg;
+    assign instruction = ctrl_stall ? 32'b00000000000000000000000000010011 : imem_dout;
 
 
     // Instantiate the instruction memory here (checkpoint 1 only)
-    imem_blk_ram(.clka(clk),
+    imem_blk_ram imem (.clka(clk),
 		.ena(ien),		//ENABLES READS AND WRITES FOR IMEM
 		.wea(ibitmask),
 		.addra(addra),
@@ -89,7 +97,7 @@ module Riscv150(
 		.doutb(imem_dout));
 
     // Instantiate the data memory here (checkpoint 1 only)
-    dmem_blk_ram(.clka(clk), 
+    dmem_blk_ram dmem (.clka(clk), 
 		.ena(den),
 		.wea(dbitmask),
 		.addra(addra),
@@ -109,40 +117,52 @@ module Riscv150(
 	.ALUsrcAX(ALUsrcA),
 	.ALUsrcBX(ALUsrcB),
 	.wbsrcM(wbsrc),
-	.Stall(stall),
+	.Stall(ctrl_stall),
 	.RegWrM(RegWrite),
 	.memaddr(memaddr),
 	.ibitmask(ibitmask),
 	.dbitmask(dbitmask),
 	.imem_en(ien),
-	.dmem_en(den));
+	.dmem_en(den),
+	.UARTDataInReady(UARTReady),
+	.UARTDataOutValid(UARTValid));
 
     // Instantiate your datapath here
    Datapath datapath (.Clock(clk),
 	.Reset(rst),
 	.RegWr(RegWrite),
 	.inst_doutb(instruction),
-	.mem_addr(addra),
+	.mem_addra(addra),
 	.dina(dina),
 	.branch_taken(branch_taken),
 	.data_forward_ALU1(ALUsrcA),
 	.data_forward_ALU2(ALUsrcB),
+	.wbsrc(wbsrc),
 	.PC_sel(PC_sel),
 	.dmem_out(dmem_out),
-	.UART_out(UARTtoWD),
+	.UART_out(UARTtoWB),
 	.ALUop(op),
-	.PC(PC),
+	.PCout(PC),
 	.memaddrD(memaddr));
 
    // Instantiate UART module
    UART uart(.Clock(clk),
 	.Reset(rst),
-	.DataInValid(0),
-	.DataInReady(0),
+	.DataInValid(UARTInputValid),
+	.DataInReady(UARTReady),
+	.DataIn (UART_DataIn),
 	.SIn(FPGA_SERIAL_RX),
 	.SOut(FPGA_SERIAL_TX),	
-	.DataOut(UARTtoWB),
-	.DataOutValid(0));
-   
+	.DataOut(UART_DataOut),
+	.DataOutValid(UARTValid));
+
+	always @(*) begin
+	   if (32'h80000000 == addra) 
+		UARTtoWBReg = {30'b0, UARTValid, UARTReady};
+	   else if (addra == 32'h80000008)
+	     UART_DataInReg = dina & 32'h0000000F;
+	   else if (32'h80000004 == addra)
+		UARTtoWBReg = {24'b0, UART_DataOut}; 
+   	end
    
 endmodule

@@ -32,7 +32,7 @@ module RegFile(input clk,
    	end 
    end 
 
-   always @(*) begin
+   always @(ra1 or ra2) begin
      if (!wr_enable) begin
 	rd1reg = r[ra1];
 	rd2reg = r[ra2];

@@ -9,17 +9,22 @@ module ControlUnit(
 	input [4:0] rs2,
 	input [4:0] rd,
 	input [31:0] memaddr,
+	input UARTDataInReady, // adfasdfad
+	input UARTDataOutValid,
 	output [3:0] ALUopX,
 	output [1:0] PCsrcM,
 	output [2:0] ALUsrcAX,
 	output [1:0] ALUsrcBX,
-	output wbsrcM,
+	output [1:0] wbsrcM,
 	output Stall,
         output RegWrM,
 	output wire imem_en,
 	output wire dmem_en,
 	output wire [3:0] ibitmask,
-	output wire [3:0] dbitmask);
+	output wire [3:0] dbitmask
+	/* input UARTDataOutValid,  
+	input UARTDataInReady,
+	output UARTDataInValid */);
    
 
 	//HAZARD CONTROL
@@ -44,9 +49,7 @@ module ControlUnit(
 	reg [1:0] PCsrcXreg;
 	reg [1:0] PCsrcMreg;
 
-	reg wbsrcDreg;
-	reg wbsrcXreg;
-	reg wbsrcMreg;
+	reg [1:0] wbsrcDreg, wbsrcXreg, wbsrcMreg;
 
 	reg StallReg;
 	
@@ -69,6 +72,8 @@ module ControlUnit(
 	reg [3:0] dbitmaskregD;
 	reg [3:0] dbitmaskregX;
 	reg [3:0] dbitmaskregM;
+
+	reg UARTDataInValidReg;
 
 	ALUdec ALUdec(.opcode(opcode),
 	  .funct(funct3),
@@ -94,6 +99,7 @@ module ControlUnit(
 	assign dbitmask = dbitmaskregM;
 	assign imem_en = ienM;
 	assign dmem_en = denM;
+	assign UARTDataInValid = UARTDataInValidReg;
 
 
 	//pipline registers
@@ -201,7 +207,7 @@ module ControlUnit(
 						ibitmaskregD <= 4'b0000; //disables writes imem
 						dbitmaskregD <= 4'b0000; //disables writes dmem
 						ienD <= 1;	//enables reads on imem
-						denD <= 1;	//enables reads on dmem	
+						denD <= 1;	//enables reads on dmem				
 					   end
 					7'b1100011: begin //Branch
 						RegWrDreg <= 0;
@@ -244,7 +250,7 @@ module ControlUnit(
 								endcase
 						end
 						if (memaddr[31]==0 && memaddr[29]==1) begin
-							ienD <= 0;	//write only
+							ienD <= 1;	//write only
 							case (funct3)
 								3'b000:
 									ibitmaskregD <= 4'b0001;
@@ -254,6 +260,7 @@ module ControlUnit(
 									ibitmaskregD <= 4'b1111;
 							endcase
 						end
+
 						ALUsrcBDreg <= 0; 	///rs2 is the data written
 						StallReg <=0;
 						PCsrcDreg <= 1;
@@ -262,6 +269,8 @@ module ControlUnit(
 					
 				   endcase
 				end // else: !if(prevOpcode==0000011)
+		
+
 		end // else: !if(branch_taken || opcode == 7'b1101111 || opcode == 7'b1100111)
 	   
 	end // always @ (posedge clk)

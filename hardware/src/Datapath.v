@@ -14,13 +14,13 @@ module Datapath ( input Clock,
 		  output [31:0] mem_addra, 
 		  output dina,
 		  output branch_taken, 
-                  output PCout,
+                  output [31:0] PCout,
 		  input data_forward_ALU1, 
 		  input data_forward_ALU2, 
 		  input PC_sel, 
 		  input dmem_out, 
-		  input UART_out,
-		  input wbsrc,
+		  input [31:0] UART_out,
+		  input [1:0] wbsrc,
 		  input ALUop,
 		  output [31:0] memaddrD);
 
@@ -163,7 +163,12 @@ module Datapath ( input Clock,
 	pipeline2_npc <= pipeline1_npc;
 	pipeline2_ALUout <= ALUout;
 	pipeline2_dmem_in <= pipeline1_loadoffsetaddr;
-	pipeline2_dmem_data <= pipeline1_ALUinputB;
 	rdM <= rdX;
+	/*if (pipeline2_dmem_in == 32'h80000008) begin // Memory IO Mapping
+		pipeline2_dmem_data <= pipeline1_ALUinputB & 32'b00000000000000000000000011111111; // Bitmask for bottom byte
+	end*/
+
+	
+
    end
 endmodule   

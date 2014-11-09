@@ -22,7 +22,8 @@ module Datapath ( input Clock,
 		  input [31:0] UART_out,
 		  input [1:0] wbsrc,
 		  input ALUop,
-		  output [31:0] memaddrD);
+		  output [31:0] memaddrD,
+		  output wb_debug);	//wb value FOR DEBUGGING PURPOSES/Testbench
 
    wire       RegWrite; // Write enable  for RegFile.v
    wire [4:0] rs1, rs2, rd;
@@ -34,6 +35,7 @@ module Datapath ( input Clock,
    wire [11:0]	    itype_imm;
    wire [31:0]	    utype_imm;
   
+   assign wb_debug = writeback_wire;
 
 
    reg [11:0] 	    target_addr;  
@@ -65,6 +67,7 @@ module Datapath ( input Clock,
    assign PC_muxselect = PC_sel;
    assign memaddrD = load_addr;
    assign PCout = PC;
+   assign writeback_wire = wb_val;
 
 
    // Instruction De-Mux
